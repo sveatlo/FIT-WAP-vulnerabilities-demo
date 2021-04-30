@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\selectlanguage}[1]{\relax}
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem{owasp:csrf}
+\emph{Cross Site Request Forgery (CSRF)}
+  \urlprefix\url{https://owasp.org/www-community/attacks/csrf}.
+
+\bibitem{owasp:clickjacking}
+\emph{Clickjacking}
+  \urlprefix\url{https://owasp.org/www-community/attacks/Clickjacking}.
+
+\bibitem{owasp:xss}
+\emph{Cross Site Scripting (XSS)}
+  \urlprefix\url{https://owasp.org/www-community/attacks/xss/}.
+
+\bibitem{wiki:xss}
+{Wikipedia contributors} \emph{Cross-site scripting --- {Wikipedia}{,} The Free
+  Encyclopedia} 2021
+  \urlprefix\url{https://en.wikipedia.org/w/index.php?title=Cross-site_scripting&oldid=1019545290}
+  [Online; accessed 29-April-2021].
+
+\end{thebibliography}

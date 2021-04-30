@@ -9,8 +9,6 @@ if (!array_key_exists('X-Xsrf-Token', $headers)) {
 }
 
 $csrf_token = $headers['X-Xsrf-Token'];
-// echo "'".$_SESSION['csrf_token']."' vs '".$csrf_token."'";
-// echo $csrf_token === $_SESSION['csrf_token'];
 if ($csrf_token !== $_SESSION['csrf_token']) {
     die_unauthorized();
 }

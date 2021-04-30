@@ -1,0 +1,104 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+	colorlinks,
+	linkcolor={red!50!black},
+	citecolor={blue!50!black},
+	urlcolor={blue!80!black}
+}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage[left=2cm,text={17cm,24cm},top=3cm]{geometry}
+\usepackage{amsmath}
+
+
+\newcommand{\source}[1]{\caption*{Source: {#1}} }
+
+\bibliographystyle{czechiso}
+
+
+\begin{document}
+\begin{titlepage}
+	\begin{center}
+	    {\LARGE\textsc{Vysoké  učení technické v Brně}}\\
+	    \smallskip
+	    {\Large\textsc{Fakulta informačních technologií}}\\
+	    \bigskip
+	    \vspace{\stretch{0.382}}
+	    \smallskip
+		\Huge{WAP}\\
+		\huge{Výuková aplikace demonstrující webové útoky}
+	    \vspace{\stretch{0.618}}
+	\end{center}
+    {\today \hfill Svätopluk Hanzel}
+\end{titlepage}
+
+\newpage
+\section{Úvod}
+	Cieľom tohto projektu je implementovať webovú aplikáciu, ktorá dokáže demonštrovať základné zraniteľnosti webových aplikácií ako XSS, CSRF a Clickjacking a zároveň demonštruuje aj ochranu proti nim.
+
+	\subsection{XSS}
+		\textit{Cross-Site Scripting} (XSS) je útok založný na vložení/podstrčení škodlivého kódu do cieľovej webovej stránky, ktorá je za bežných okolností dôveryhodná a nie je nebezpečná. Vložený kód je vačšinou vo forme JavaScriptu, ktorý sa spúšťa až v prehliadači obete, ktorá je už v tom čase autentifikovaná a z pohľadu servera dôveryhodná. Nebezpečenstvo takejto zraniteľnosti sa môže líšiť a pohybuje sa od relatívne neškodného zobrazovania cudzieho obsahu až po ukradnutie \textit{HTTP cookies}\footnote{\url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies}}, čím dokáže útočník napodobniť obeť a vykonávať akcie v jej mene.
+		
+		XSS útoky sa ďalej rozdeľujú na:
+		\begin{itemize}
+			\item \textbf{lokálne} - útok je založený na úprave parametru stránky, ktorý sa následne použije ako súčasť zdrojového kódu stránky.
+			\item \textbf{perzistentné} - škodlivý kód je uložený v DB a načíta sa všetkým návštevníkom stránky.
+		\end{itemize}
+	
+		\paragraph{Ochrana} Ochrana proti útokom XSS spočíva hlavne v odstránení potenciálne nebezpečného kódu zo všetkých vstupov, resp. v znemožnení ich injekcie do aplikácie. Toto zahŕňa hlavne sanitáciu vstupných polí na strane klienta aj serveru a sanitáciu kódu vkladaného do stránky.
+		
+	\subsection{CSRF}
+		\textit{Cross-Site Request Forgery} (CSRF) je útok založený na exekúcií nechcených požiadaviek v mene prihláseného používateľa. Útočník tohto môže docieliť pomocou sociálneho inžinierstva, kde cez napr. podvodný mail navedie prihláseného používateľa na svoju stránku, ktorá následne zneužije toho, že je používateľ prihlásený v cieľovej aplikácií a spustí požiadavku na server, ktorá sa vykoná. V prípade, že je prihlásený administrátor, dokáže tento typ útoku kompromitovať celú aplikáciu.
+		
+		\paragraph{Ochrana} Proti CSRF útokom je možná hlavne použitím tzv. \textit{autorizačného token-u}, ktorý môže byť unikátny pre jedno prihlásenie používateľa alebo (lepšie) pre každý request. Unikátny token pre každý request však môže znamenať zhoršený užívateľský zážitok, pretože sa nebudú dať odoslať formuláre, na ktoré sa používateľ dostane spätným prechádzaním históriou svojho prehliadača.
+		
+	\subsection{Clickjacking}
+		\textit{Clickjacking} je útok založený na navedení obete na zdanlivo neškodnú stránku, kde je však zavádzaný a svojimi akciami v skutočnosti spustí nechcené akcie, či pošle nechcené požiadavky na server. Clickjacking je väčšinou prevádzaný pomocou viacerých vrstiev, kedy je cieľová stránka zobrazena cez \textit{iframe} v neviditeľnej vrstve (\texttt{opacity: 0}) a pod ňou je napr. nejaké tlačidlo, ktoré používateľ síce vidí, ale nemože naň kliknúť.
+		
+	
+\section{Implementácia}
+	Projekt je implementovaný formou demo bankovej webovej aplikácie, ktorá má oddelenú frontend a backend časť. Komunikácia medzi nimi je riešená cez AJAX HTTP requesty s JSON enkódovaním.
+	
+	\subsection{Frontend}
+		Frontend časť aplikácie je implementovaná pomocou JS knižnice React\footnote{\url{https://reactjs.org/}}, ktorá sa stará o vykresľovanie a aktualizáciu stránky. Ďalšími použitými knižnicami sú react-router\footnote{\url{https://reactrouter.com}} sanitize-html\footnote{\url{https://github.com/apostrophecms/sanitize-html}}. Samotná aplikácia je potom rozdelená na 2 časti - prihlasovanie a samotnú aplikáciu.
+		
+		Prihlasovanie prebieha AJAX requestom na backend endpoint \texttt{login.php}. Následne sa údaje uložia do \texttt{window.localStorage}, čo na rozdieľ od \texttt{sessionStorage} umožňuje clickjacking útok.
+		Portálová časť frontendu sa ďalej skladá z niekoľkých ciest, ktoré ukazujú základnú prácu so systémom a zraniteľnosti.
+		\paragraph{/transactions/list/} obsahuje zoznam transakcií, v ktorých sa dá vyhľadávať. Avšak zadaním škodlivého kódu do poľa sa dá uskutočniť XSS útok. Napríklad \texttt{<img src="1" onerror="alert('you have been pwnd!');">} zobrazí vyskakovacie okno. Tento útok sa dá zároveň zopakovať pomocou URL \url{http://localhost:3000/transactions/list/\%3Cimg\%20src=\%221\%22\%20onerror=\%22alert('you\%20have\%20been\%20pwnd!');\%22\%3E}. takto dokáže útoční získať kontrolu nad prehliadačom obete, získať cookies a pod. Túto zraniteľnosť ďalej opravuje \texttt{/transactions/list-secure/}.
+		\paragraph{/transactions/new} umožňuje vytvorenie novej transakcie v konte používateľa. Súčasťou tohto formuláru je aj checkbox, ktorý mení použitý endpoint zo zabezpečenej varianty na nezabezpečenú, čím ukazuje funkcionalitu overovania CSRF tokenu.
+		
+		
+	\subsection{Backend}
+		Backend časť aplikácie je založená na už zastarej verzii PHP 5.3 bez použitia akéhokoľvek frameworku. Obsahuje spoločný kód na spracovanie požiadaviek (vytvorenie session, overenie prihlásenia, atď.) a jednotlivých PHP skriptov, ktoré vykonávajú samotné akcie.
+		
+		\paragraph{login.php} Overuje meno a heslo používateľa a v prípade zhody (test:test) nastaví v jeho session príznak prihlásenia. Zároveň preňho vytvorí niektoré údaje potrebné pre funkciu aplikácie a vygeneruje mu CSRF token, na ochranu pre CSRF útokmi.
+		\paragraph{logout.php} Zruší session používateľa, čím príde k odhláseniu
+		\paragraph{account.php} Umožňuje prihlásenému používateľovi získať informácie o jeho účte vrátane aktuálneho zostatku a všetkých transakcií. 
+		\paragraph{transfer.php} Je skript implementujúci ukážkové prevedenie financií z účtu prihláseného používateľa inému používateľovi. \textbf{Nezabezpečená verzia}
+		\paragraph{transfer\_secure.php} Implemetuje rovnakú funkcionalitu ako \texttt{transfer.php}, no zároveň kontroluje CSRF token v hlavičke \texttt{X-XSRF-TOKEN}. Pokiaľ sa nezhoduje s tokenom vygenerovaným pre túto session používateľa, považuje používateľa za neprihláseného.
+		
+		Ďalšie nastavenie backend časti je v pribalenom \texttt{.htaccess} súbore, ktorý nastavuje Apache server, aby pridával k jednotlivým requestom CORS\footnote{\url{https://fetch.spec.whatwg.org/}} hlavičky.
+	
+	\subsection{Aplikácia útočníka}
+		Aplikácia útočníka je len kolekcia jednoduchých HTML stránok, ktoré demonštruujú útoky v ich najzákladnejšej forme.
+		
+		\paragraph{image.html} je stránka demonštruujúca CSRF útok na nezabezpečenej verzii backend endpointu \texttt{transaction.php}. Pomocou jednoduchého načítania obrázku s URL odkazujúceho na \texttt{transfer.php} sa vykoná prevod financií na účet útočníka.
+		\paragraph{image-futile.html} demonštruuje ochranu proti CSRF útoku pomocou \texttt{transfer\_secure.php} a GET request-u, ktorý nie je podporovaný.
+		\paragraph{form-futile.php} taktiež demonštruuje ochranu proti CSRF útokom, no tu sa používa POST request. Bez platného CSRF tokenu v hlavičke request je však aj tento request neplatný.
+		\paragraph{iphone-winner.html} je stránka demonštruujúca útok Clickjacking, kde sa v ifram-e načíta frontend našej bankovej aplikácie a používateľ sa kliknutím na tlačidlo \textit{Claim!}  odhlási.
+		
+		
+		
+\section{Záver}
+	Týmto projektom som naimplementoval plne funkčnú aplikáciu, ktorá demonštruuje rôzne spôsoby útokov a ochrany proti nim. Počas práce na nej som zistil, že väčšina moderných nástrojov, frameworkov  a prehliadačov aktívne bojuje proti týmto útokom a pomáha tak vývojárom v dodávaní bezpečných aplikácií.
+
+\newpage
+\nocite{*}
+\bibliography{references}
+\end{document}
